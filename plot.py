@@ -1,6 +1,6 @@
 import pandas as pd
 import numpy as np
-import plotly
+import plotly.graph_objects as go
 
 #create 7 numpy arrays for the x values
 #sodium (ref: 135 to 145 mmol/L)
@@ -48,7 +48,6 @@ qc_df= pd.DataFrame({"sodium": na,
                     "creatinine": creat,
                     "calcium": ca
                     })
-print(qc_df.head(5))
 
 
 #calculate standard deviation
@@ -56,5 +55,18 @@ stds= qc_df.std()
 
 #find +- standard deviations
 plus_one_std= stds + 1
-print(plus_one_std)
+minus_one_std= stds - 1
+
 #plot graphs!
+#create date columns
+qc_df['dates']= pd.date_range(start= '1/19/2026', end= '2/2/2026')
+
+fig = go.Figure(go.Scatter(
+    x= qc_df['dates'],
+    y= qc_df['sodium']
+))
+fig.update_layout(
+    title= 'Plotting sodium values'
+    
+)
+fig.show()
