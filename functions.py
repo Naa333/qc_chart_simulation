@@ -1,4 +1,4 @@
-#generating functions for plotting graphs
+ #generating functions for plotting graphs
 #create a dummy df of values I can plot
 import numpy as np
 import pandas as pd
@@ -33,8 +33,9 @@ def build_df(data_dict, start_date): #num_of_entries has to be the same
 def plot_graph(df):
     fig = go.Figure()
 
-    # Add all traces, initially set visible=False except first
-    traces = []
+    data_traces = []
+    stats_traces_indices = [] 
+    
     for i, column in enumerate(df.columns[:-1]):  # exclude dates
         visible = (i == 0)  # first one visible
         trace = go.Scatter(
@@ -44,9 +45,13 @@ def plot_graph(df):
             visible=visible
         )
         fig.add_trace(trace)
-        traces.append(column)
+        data_traces.append(column)
 
-        #statistics trace list
+    # Add statistics traces and track their indices
+    for column in df.columns[:-1]:
+        i = df.columns.get_loc(column)
+        stats_indices = []  # Store trace indices for this parameter's stats
+        
         fig.add_trace(
             go.Scatter(
                 x= df['dates'],
@@ -54,9 +59,10 @@ def plot_graph(df):
                 name= 'Mean',
                 visible= (i == 0),
                 line= dict(color= "green")
-
             )
         )
+        stats_indices.append(len(fig.data) - 1)
+        
         fig.add_trace(
             go.Scatter(
                 x= df['dates'],
@@ -64,9 +70,10 @@ def plot_graph(df):
                 name= 'Minus One Std Dev',
                 visible= (i == 0),
                 line= dict(color= "yellow")
-
             )
         )
+        stats_indices.append(len(fig.data) - 1)
+        
         fig.add_trace(
             go.Scatter(
                 x= df['dates'],
@@ -74,9 +81,10 @@ def plot_graph(df):
                 name= 'Minus Two Std Dev',
                 visible= (i == 0),
                 line= dict(color= "red")
-
             )
         )
+        stats_indices.append(len(fig.data) - 1)
+        
         fig.add_trace(
             go.Scatter(
                 x= df['dates'],
@@ -86,6 +94,8 @@ def plot_graph(df):
                 line= dict(color= "yellow")
             )
         )
+        stats_indices.append(len(fig.data) - 1)
+        
         fig.add_trace(
             go.Scatter(
                 x= df['dates'],
@@ -95,5 +105,41 @@ def plot_graph(df):
                 line= dict(color= "red")
             )
         )
+        stats_indices.append(len(fig.data) - 1)
+        
+        stats_traces_indices.append(stats_indices)
+    
+    # Create dropdown menu
+    buttons = []
+    for i, column in enumerate(data_traces):
+        visible_list = [False] * len(fig.data)
+        # Show the data trace for the selected column
+        visible_list[i] = True
+        # Show the statistical traces for this parameter
+        for stat_idx in stats_traces_indices[i]:
+            visible_list[stat_idx] = True
+        
+        button = dict(
+            label=column,
+            method="update",
+            args=[{"visible": visible_list}]
+        )
+        buttons.append(button)
+    
+    # Add dropdown menu to layout
+    fig.update_layout(
+        updatemenus=[
+            dict(
+                active=0,
+                buttons=buttons,
+                direction="down",
+                showactive=True,
+                x=0.1,
+                xanchor="left",
+                y=1.1,
+                yanchor="top"
+            )
+        ]
+    )
     
     return fig
