@@ -4,110 +4,87 @@ import numpy as np
 import pandas as pd
 import plotly.graph_objects as go
 
-
-def generate_data(column_name, data_range, num_of_entries):
+rng= np.default_range(42)
+def generate_data(column_name, data_range, num_of_entries, rng):
     #loop and generate data for each column name (dict)
     #if data type of data range = int, use int random generator
     #else use float
-    data= {}
     if isinstance(data_range[0], int):
-        rng = np.random.default_rng(42)
-        data[column_name]= rng.integers(low= data_range[0], high= data_range[-1], size= num_of_entries)
+        values= rng.integers(
+                        low= data_range[0], 
+                        high= data_range[-1], 
+                        size= num_of_entries
+                            )
     else:
-        rng = np.random.default_rng(42)
-        data[column_name]= np.round(rng.uniform(low= data_range[0], high= data_range[-1], size= num_of_entries), 1)
-    return data
-
-def get_std(df, column_name):
-    return df[column_name].std()
-
-def get_mean(df, column_name):
-    return df[column_name].mean()
+        values= np.round(
+                        rng.uniform(
+                         low= data_range[0], 
+                         high= data_range[-1], 
+                         size= num_of_entries),
+                       1
+                       )
+    return {column_name: values}
 
 def build_df(data_dict, start_date): #num_of_entries has to be the same
     df = pd.DataFrame(data_dict)
     #add date column. Generate a sequence of dates from the specified date daily, 'D', up to the length of vertical cols
-    df['dates']= pd.date_range(start= start_date, periods= len(df.index), freq= 'D') 
+    df['dates']= pd.date_range(
+                         start= start_date, 
+                         periods= len(df.index), 
+                         freq= 'D'
+                         ) 
     return df
+
+def compute_stats(df, column_name):
+    mean= df[column_name].mean() 
+    std= df[column_name].std()
+    return mean, std
+ 
+
 
 def plot_graph(df):
     fig = go.Figure()
 
     data_traces = []
     stats_traces_indices = [] 
-    
-    for i, column in enumerate(df.columns[:-1]):  # exclude dates
+    columns= df.columns.difference (['dates'])  # exclude dates
+ 
+    for i, column in enumerate(columns):  
         visible = (i == 0)  # first one visible
-        trace = go.Scatter(
-            x=df['dates'],
-            y=df[column],
-            name=column,
-            visible=visible
-        )
-        fig.add_trace(trace)
+        fig.add_trace(
+                      go.Scatter(
+                      x=df['dates'],
+                      y=df[column],
+                      name=column,
+                      visible=visible
+                  )
         data_traces.append(column)
 
     # Add statistics traces and track their indices
-    for column in df.columns[:-1]:
-        i = df.columns.get_loc(column)
-        stats_indices = []  # Store trace indices for this parameter's stats
-        
-        fig.add_trace(
-            go.Scatter(
-                x= df['dates'],
-                y= [(get_mean(df, column))]*len(df[column]),
-                name= 'Mean',
-                visible= (i == 0),
-                line= dict(color= "green")
-            )
-        )
-        stats_indices.append(len(fig.data) - 1)
-        
-        fig.add_trace(
-            go.Scatter(
-                x= df['dates'],
-                y= [get_mean(df, column)-get_std(df, column)]*len(df[column]),
-                name= 'Minus One Std Dev',
-                visible= (i == 0),
-                line= dict(color= "yellow")
-            )
-        )
-        stats_indices.append(len(fig.data) - 1)
-        
-        fig.add_trace(
-            go.Scatter(
-                x= df['dates'],
-                y= [get_mean(df, column)- (2*get_std(df, column))]*len(df[column]),
-                name= 'Minus Two Std Dev',
-                visible= (i == 0),
-                line= dict(color= "red")
-            )
-        )
-        stats_indices.append(len(fig.data) - 1)
-        
-        fig.add_trace(
-            go.Scatter(
-                x= df['dates'],
-                y= [get_mean(df, column)+get_std(df, column)]*len(df[column]),
-                name= 'Plus One Std Dev',
-                visible= (i == 0),
-                line= dict(color= "yellow")
-            )
-        )
-        stats_indices.append(len(fig.data) - 1)
-        
-        fig.add_trace(
-            go.Scatter(
-                x= df['dates'],
-                y= [get_mean(df, column)+ (2*get_std(df, column))]*len(df[column]),
-                name= 'Plus Two Std Dev',
-                visible= (i == 0),
-                line= dict(color= "red")
-            )
-        )
-        stats_indices.append(len(fig.data) - 1)
-        
-        stats_traces_indices.append(stats_indices)
+   std_levels= {
+    -2: {"color": "red", "name": "Minus Two SD"},
+    -1: {"color": "yellow", "name": "Minus One SD"},
+     0: {"color": "green", "name": "Mean"},
+     1: {"color": "yellow", "name": "Plus One SD"},
+     2: {"color": "red", "name": "Plus Two SD"}
+    }
+    for i, column in enumerate(columns): 
+       mean, std = compute_stats(df, column)
+       stats_indices = []
+   
+       for level, features in std_levels.items():
+           fig.add_trace(
+               go.Scatter(
+                   x=df["dates"],
+                   y=[mean + level * std] * len(df),
+                   name=features["name"],
+                   visible=(i == 0),
+                   line=dict(color=features["color"], dash="dash")
+               )
+           )
+           stats_indices.append(len(fig.data) - 1)
+
+    stats_traces_indices.append(stats_indices)
     
     # Create dropdown menu
     buttons = []
