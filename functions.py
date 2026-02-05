@@ -105,6 +105,10 @@ def plot_graph(df):
     
     # Add dropdown menu to layout
     fig.update_layout(
+        plot_bgcolor='white',
+        title="QC Parameter Trends with Statistics",
+        xaxis_title="Date",
+        yaxis_title="Value",
         updatemenus=[
             dict(
                 active=0,
