@@ -2,4 +2,4 @@
 Creating QC charts with Plotly
 
 TODO
-1. Figure out why the means are not aligning
+1. Implement statistical analysis from separate qc files
