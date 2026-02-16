@@ -11,9 +11,9 @@ def plot_graph(qc_df, stats_df):
  
     # Add statistics traces and track their indices
     std_levels = {
-        1: {"name": "Mean ± 1 Std Dev", "line_color": "orange", "fill_color": "rgba(227, 96, 9, 0.75)"},
-        2: {"name": "Mean ± 2 Std Dev", "line_color": "yellow", "fill_color": "rgba(227, 212, 9, 0.75)"},
-        3: {"name": "Mean ± 3 Std Dev", "line_color": "red", "fill_color": "rgba(227, 9, 9, 0.6)"},
+        3: {"name": "Mean ± 3 Std Dev", "line_color": "red", "fill_color": "rgba(227, 9, 9, 0.80)"},
+        2: {"name": "Mean ± 2 Std Dev", "line_color": "yellow", "fill_color": "rgba(227, 212, 9, 0.95)"},
+        1: {"name": "Mean ± 1 Std Dev", "line_color": "green", "fill_color": "rgba(27, 96, 9, 0.65)"},
     }
     for i, column in enumerate(qc_columns): 
        mean, std = stats_df.loc[i, "Target Mean"], stats_df.loc[i, "SD"]
@@ -27,7 +27,7 @@ def plot_graph(qc_df, stats_df):
                    y=[mean - (level * std)] * len(qc_df),
                    name=features["name"],
                    visible=(i == 0),
-                   line=dict(color=features["line_color"], dash="solid"),
+                   line=dict(width=0),
                    legendgroup=features["name"],
                    showlegend=False
                )
@@ -41,23 +41,23 @@ def plot_graph(qc_df, stats_df):
                    y=[mean + (level * std)] * len(qc_df),
                    name=features["name"],
                    visible=(i == 0),
-                   line=dict(color=features["line_color"], dash="solid"),
+                   line=dict(width=0),
                    fill='tonexty',
                    fillcolor=features["fill_color"],
                    legendgroup=features["name"],
-                   showlegend=(i == 0)
+                   showlegend= True
                )
            )
            stats_indices.append(len(fig.data) - 1)
    
-       # Add mean line
+       # Add mean
        fig.add_trace(
            go.Scatter(
                x=qc_df["dates"],
                y=[mean] * len(qc_df),
                name="Mean",
                visible=(i == 0),
-               line=dict(color="green", dash="solid"),
+               line=dict(width=0.9, color="darkgreen"),
                legendgroup="Mean",
                showlegend=(i == 0)
            )

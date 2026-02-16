@@ -13,19 +13,14 @@ def generate_data(stats_df, num_of_entries, rng=rng):
     for i, column_name in enumerate(analytes):
         mean= means[i]
         std= stds[i]
-        if isinstance(mean, int):
-            values= rng.integers(
-                            low= mean - std, 
-                            high= mean + std, 
-                            size= num_of_entries
-                                )
-        else:
-            values= np.round(
-                            rng.uniform(
-                            low= mean - std, 
-                            high= mean + std, 
-                            size= num_of_entries),
-                        1
-                        )
+  
+        scale = rng.uniform(1.0, 50.0)
+        values= np.round(
+                        rng.uniform(
+                        low= mean - (std * scale), 
+                        high= mean + (std * scale), 
+                        size= num_of_entries),
+                    1
+                    )
         data_dict[column_name] = values
     return data_dict
